@@ -30,3 +30,4 @@
 | 2026-05-25 | 10 per-advisor cold-email variants drafted (outreach/email_variants/) | Most likely to respond: Šavelka, Nyarko, Khashabi; least confident: Ho, Lapata (too senior); Matthes + Vlachos flagged for citation-specificity refinement | Yes — user customizes before sending |
 | 2026-05-25 | Phase 4 cash budget estimate: ~$2,500–$3,500 (application fees + transcripts + GRE) | Total 18-month out-of-pocket: ~$5K–$7K | N/A — observation |
 | 2026-05-25 | Project root README.md written for navigation | Quick-start guide + file map + outstanding M2 decisions | Yes |
+| 2026-05-25 | Split problem_statement.md into two files (problem_statement.md + citecheck_design.md) | Original v0.1 was 1,265 words — 2x the Phase 1 plan's 400-600 target. Tight problem statement is the "SOP / advisor outreach" version; design doc holds full implementation detail. | Yes — files can be re-merged |

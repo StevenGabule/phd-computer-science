@@ -20,7 +20,8 @@
 ### Research project
 
 - [`project/candidates.md`](project/candidates.md) — 4 candidate problem statements (A, B, C, D) with cross-candidate validation
-- [`project/problem_statement.md`](project/problem_statement.md) — CiteCheck v0.1 draft (awaiting M2 lock 2026-08-31)
+- [`project/problem_statement.md`](project/problem_statement.md) — CiteCheck tight ~500-word problem statement (v0.1; awaiting M2 lock 2026-08-31)
+- [`project/citecheck_design.md`](project/citecheck_design.md) — Full implementation detail (method, datasets, baselines, metrics, risks, references)
 - [`project/m2_lock_checklist.md`](project/m2_lock_checklist.md) — All decisions due by Aug 31, 2026
 - [`literature/reading_list.md`](literature/reading_list.md) — 56-paper reading list
 - [`literature/taxonomy.md`](literature/taxonomy.md) — Cluster taxonomy + candidate gap analysis
