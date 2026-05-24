@@ -36,13 +36,44 @@
 - [`outreach/email_variants/`](outreach/email_variants/) — Per-advisor customized email drafts (top 10)
 - [`outreach/log.md`](outreach/log.md) — Outreach send log
 - [`applications/sop_narrative_skeleton.md`](applications/sop_narrative_skeleton.md) — Reusable SOP narrative core for CiteCheck
+- [`applications/sop_variants/`](applications/sop_variants/) — 5 per-program SOP drafts (Stanford, CMU, JHU, UMass, Edinburgh)
 - [`applications/artifacts_strategy.md`](applications/artifacts_strategy.md) — Pre-PhD artifact commitments to fill SOP track-record gap
 - [`applications/interview_prep_template.md`](applications/interview_prep_template.md) — Per-program interview prep + master interview log (for Jan-Mar 2028)
+- [`applications/interviews/scenarios.md`](applications/interviews/scenarios.md) — 10 common interview questions with example answers
+- [`applications/interviews/per_advisor_prep.md`](applications/interviews/per_advisor_prep.md) — Per-advisor rehearsed openings for the top 10 starred
+- [`applications/recommender_packets/_template.md`](applications/recommender_packets/_template.md) — Reusable recommender packet structure
+- [`applications/recommender_packets/ask_emails/`](applications/recommender_packets/ask_emails/) — 4 ask-email archetypes (master's advisor, coursework professor, industry, collaborator)
+- [`applications/recommender_packets/followup_emails/`](applications/recommender_packets/followup_emails/) — T-21 / T-7 / T-2 / escalation reminder ladder
+- [`applications/submission/arxiv_prep_guide.md`](applications/submission/arxiv_prep_guide.md) — arXiv preprint submission guide
+- [`applications/submission/camera_ready_checklist.md`](applications/submission/camera_ready_checklist.md) — 12-phase camera-ready checklist
+- [`applications/submission/portal_navigation_guide.md`](applications/submission/portal_navigation_guide.md) — Per-program portal quirks for top 10 programs
+- [`applications/submission/deadline_tracker_template.csv`](applications/submission/deadline_tracker_template.csv) — 27-program deadline tracker (CSV)
+- [`applications/submission/blockers.md`](applications/submission/blockers.md) — Live application-blocker log
+- [`applications/submission/transcript_checklist.md`](applications/submission/transcript_checklist.md) — Transcript order checklist
+- [`applications/submission/fee_waiver_lookup.md`](applications/submission/fee_waiver_lookup.md) — Per-program fee + waiver matrix
+- [`applications/submission/final_week_protocol.md`](applications/submission/final_week_protocol.md) — Day-by-day final-week submission playbook
+- [`docs/papers/citecheck_outline.md`](docs/papers/citecheck_outline.md) — Paper outline (5,250 words, 49 references)
+- [`docs/papers/latex/`](docs/papers/latex/) — LaTeX paper project (main.tex, references.bib, Makefile)
 
 ### Journals
 
 - [`journal/weekly.md`](journal/weekly.md) — Weekly retrospectives (every Sunday)
 - [`journal/decisions.md`](journal/decisions.md) — Decision log (every load-bearing decision)
+- [`journal/phase2_milestone_templates.md`](journal/phase2_milestone_templates.md) — M3/M4/M5 + Phase 2 closeout retrospective templates
+- [`journal/phase4_closeout_template.md`](journal/phase4_closeout_template.md) — Phase 4 + 18-month plan closeout retrospective templates
+
+### Phase status + AI limits
+
+- [`docs/superpowers/plans/phase2_implementation_status.md`](docs/superpowers/plans/phase2_implementation_status.md) — Phase 2 task → scaffold mapping
+- [`docs/superpowers/plans/phase3_implementation_status.md`](docs/superpowers/plans/phase3_implementation_status.md) — Phase 3 task → scaffold mapping
+- [`docs/superpowers/plans/phase4_implementation_status.md`](docs/superpowers/plans/phase4_implementation_status.md) — Phase 4 task → scaffold mapping
+- [`PHASE2_LIMITS.md`](PHASE2_LIMITS.md) — What AI cannot do for Phase 2 execution
+- [`PHASE3_LIMITS.md`](PHASE3_LIMITS.md) — What AI cannot do for Phase 3 execution
+- [`PHASE4_LIMITS.md`](PHASE4_LIMITS.md) — What AI cannot do for Phase 4 execution
+
+### CiteCheck codebase
+
+- [`citecheck/`](citecheck/) — Full Python package scaffold (49 Python files, 7,000+ lines, 107 tests). See `citecheck/README.md`.
 
 ---
 
@@ -53,9 +84,9 @@ The plan is structured as **4 phases × 4 tracks**:
 | Phase | Months | Focus | Status |
 |---|---|---|---|
 | 1. Foundation | May–Aug 2026 | Literature map, niche lock, infrastructure | **Active** — pre-work + parts of M1 done by assistant; user executing M1-M2 |
-| 2. Build | Sep 2026 – Apr 2027 | Baseline reproduction → novel contribution → full experiments | Plan written |
-| 3. Publish & Apply | May–Sep 2027 | Paper draft, workshop submission, finalize application materials | Plan written |
-| 4. Application Push | Oct–Dec 2027 | Submit all PhD applications | Plan written |
+| 2. Build | Sep 2026 – Apr 2027 | Baseline reproduction → novel contribution → full experiments | Plan written + code scaffold complete (`citecheck/`) |
+| 3. Publish & Apply | May–Sep 2027 | Paper draft, workshop submission, finalize application materials | Plan written + LaTeX skeleton + 5 SOP drafts + submission guides |
+| 4. Application Push | Oct–Dec 2027 | Submit all PhD applications | Plan written + deadline tracker (27 programs) + recommender + interview prep |
 
 | Track | Weight | Description |
 |---|---|---|
