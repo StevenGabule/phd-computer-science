@@ -102,13 +102,20 @@ class BluebookGrammar:
 
     # -------- token-level pieces -------------------------------------------
     # Case names: at least one capitalized word, then v./vs., then more capitalized
-    # words. Allow internal commas (e.g. "Smith, Inc. v. Jones, LLC").
+    # words. Allow internal commas (e.g. "Smith, Inc. v. Jones, LLC") and
+    # lowercase connectors (e.g. "Brown v. Board of Education", "In re Foo").
+    # _NAME_TOKEN matches either a capitalized word OR a small set of legal
+    # connectors that frequently appear unaltered in case names.
+    _NAME_TOKEN = (
+        r"(?:[A-Z][A-Za-z0-9'\-&.]*"            # capitalized word
+        r"|of|the|and|for|in|on|de|du|la|le|von|van|el)"
+    )
     _CASE_NAME = (
-        r"(?:[A-Z][A-Za-z0-9'\-&.]*"          # first capitalized token
-        r"(?:[ ,][A-Z][A-Za-z0-9'\-&.]*){0,8})"  # up to 8 more tokens
-        r"\s+v\.?\s+"                          # v. separator (allow no period)
+        r"(?:[A-Z][A-Za-z0-9'\-&.]*"            # first token MUST be capitalized
+        r"(?:(?:,?\s+)" + _NAME_TOKEN + r"){0,10})"
+        r"\s+v\.?\s+"                            # v. separator
         r"(?:[A-Z][A-Za-z0-9'\-&.]*"
-        r"(?:[ ,][A-Z][A-Za-z0-9'\-&.]*){0,8})"
+        r"(?:(?:,?\s+)" + _NAME_TOKEN + r"){0,10})"
     )
     _VOLUME = r"\d{1,4}"
     _PAGE = r"\d{1,6}(?:,\s*\d{1,6})?"  # allow optional pin cite
@@ -149,7 +156,7 @@ class BluebookGrammar:
         choke, and the names carry no information for constrained decoding).
         """
         # Strip ?P<name> annotations: (?P<x>...) -> (?:...)
-        return re.sub(r"\?P<[a-zA-Z_]+>", ":", self.bluebook_regex)
+        return re.sub(r"\?P<[a-zA-Z_]+>", "?:", self.bluebook_regex)
 
     def validate(self, text: str) -> bool:
         """``True`` iff ``text`` contains at least one matching citation span.
