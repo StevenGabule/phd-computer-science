@@ -421,3 +421,68 @@ def test_llm_judge_default_complete_raises():
     judge = LLMJudge(dual_judge=False)
     with pytest.raises(NotImplementedError):
         judge._complete(prompt="hello", model=judge.model)
+
+
+# ---------------------------------------------------------------------------
+# Adapters: AnswerWithCitations.from_agent_answer / VerificationResult.from_agent_result
+# ---------------------------------------------------------------------------
+def test_from_agent_answer_handles_tuple_citations():
+    """The runner relies on this adapter to bridge the agent's answer shape."""
+
+    class _AgentVR:
+        def __init__(self):
+            self.citation_str = "X"
+            self.status = "verified"
+            self.entailment_score = 0.8
+            self.notes = "ok"
+            self.resolved_opinion = MagicMock(id=99, court_jurisdiction="F-9")
+
+    class _AgentAnswer:
+        def __init__(self):
+            self.text = "ans"
+            self.citations = [("Smith v. Jones, 412 F.3d 567 (9th Cir. 2005)", _AgentVR())]
+            self.iterations_used = 2
+            self.retrieved_doc_ids = ["d1", "d2"]
+
+    pred = AnswerWithCitations.from_agent_answer(
+        _AgentAnswer(), question_id="qx", latency_ms=10.0, tokens_used=5
+    )
+    assert pred.question_id == "qx"
+    assert pred.answer_text == "ans"
+    assert pred.citations == ["Smith v. Jones, 412 F.3d 567 (9th Cir. 2005)"]
+    assert len(pred.verification_results) == 1
+    vr = pred.verification_results[0]
+    assert vr.status == CitationStatus.VERIFIED
+    assert vr.resolved_opinion_id == 99
+    assert vr.resolved_court_jurisdiction == "F-9"
+    assert pred.metadata["iterations_used"] == 2
+    assert pred.metadata["retrieved_doc_ids"] == ["d1", "d2"]
+
+
+def test_from_agent_answer_passes_through_eval_shape():
+    """When given an already-eval-shaped object, the adapter just normalizes IDs."""
+    eval_shaped = AnswerWithCitations(
+        question_id="orig",
+        answer_text="t",
+        citations=[],
+        verification_results=[],
+        latency_ms=42.0,
+        tokens_used=7,
+    )
+    pred = AnswerWithCitations.from_agent_answer(eval_shaped, question_id="overridden")
+    assert pred.question_id == "overridden"
+    assert pred.latency_ms == 42.0
+
+
+def test_verification_result_from_agent_unknown_status_falls_through():
+    """A junk status string should map to CitationStatus.UNKNOWN, not raise."""
+
+    class _Junk:
+        citation_str = "X"
+        status = "fake_status_unrecognized"
+        entailment_score = None
+        resolved_opinion = None
+        notes = ""
+
+    vr = VerificationResult.from_agent_result(_Junk(), citation_str="X")
+    assert vr.status == CitationStatus.UNKNOWN
