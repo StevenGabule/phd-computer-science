@@ -78,17 +78,31 @@ def test_benchmark_example_jsonl_roundtrip(tmp_path: Path):
     to_jsonl = benchmarks.to_jsonl
 
     examples = [
-        example_cls(id="b1", question="Q1?", answer="A1", metadata={"source": "cuad"}),
-        example_cls(id="b2", question="Q2?", answer="A2", metadata={}),
+        example_cls(
+            id="b1",
+            source="cuad",
+            question="Q1?",
+            gold_passages=["passage A"],
+            gold_answer="A1",
+            metadata={"category": "termination"},
+        ),
+        example_cls(
+            id="b2",
+            source="legalbench-rag",
+            question="Q2?",
+            gold_passages=[],
+            gold_answer="A2",
+            metadata={},
+        ),
     ]
     out = tmp_path / "bench.jsonl"
     to_jsonl(examples, out)
 
-    # Each line should be valid JSON with the same id/question/answer.
     lines = out.read_text(encoding="utf-8").strip().splitlines()
     assert len(lines) == len(examples)
     parsed = [json.loads(line) for line in lines]
     assert parsed[0]["id"] == "b1"
+    assert parsed[0]["source"] == "cuad"
     assert parsed[1]["question"] == "Q2?"
 
 
