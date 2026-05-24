@@ -16,20 +16,50 @@ import pytest
 # ---------------------------------------------------------------------------
 # CiteCheckExample (data.eval_set)
 # ---------------------------------------------------------------------------
-def test_cite_check_example_roundtrip(tmp_path: Path, sample_eval_examples):
-    """JSONL round-trip through save_eval_set / load_eval_set preserves fields."""
+def test_cite_check_example_roundtrip(tmp_path: Path):
+    """JSONL round-trip through save_eval_set / load_eval_set preserves fields.
+
+    Uses the real ``data.eval_set`` types (with ``GoldCitation`` records) so the
+    on-disk schema matches what ``load_eval_set`` expects.
+    """
     eval_set = pytest.importorskip("citecheck.data.eval_set")
 
-    out = tmp_path / "eval.jsonl"
-    eval_set.save_eval_set(sample_eval_examples, out)
+    examples = [
+        eval_set.CiteCheckExample(
+            id="rt001",
+            question="Round-trip test question 1",
+            gold_citations=[
+                eval_set.GoldCitation(citation="Smith v. Jones, 412 F.3d 567", cl_opinion_id=12345),
+            ],
+            jurisdiction="us",
+            source="manual",
+            metadata={"note": "fixture"},
+        ),
+        eval_set.CiteCheckExample(
+            id="rt002",
+            question="Round-trip test question 2",
+            gold_citations=[
+                eval_set.GoldCitation(citation="Brown v. Board, 347 U.S. 483", cl_opinion_id=None),
+            ],
+            jurisdiction="us",
+            source="charlotin",
+        ),
+    ]
 
+    out = tmp_path / "eval.jsonl"
+    eval_set.save_eval_set(examples, out)
     loaded = eval_set.load_eval_set(out)
-    assert len(loaded) == len(sample_eval_examples)
-    for orig, back in zip(sample_eval_examples, loaded, strict=True):
+
+    assert len(loaded) == len(examples)
+    for orig, back in zip(examples, loaded, strict=True):
         assert orig.id == back.id
         assert orig.question == back.question
-        assert orig.gold_citations == back.gold_citations
         assert orig.jurisdiction == back.jurisdiction
+        assert orig.source == back.source
+        assert len(orig.gold_citations) == len(back.gold_citations)
+        for a, b in zip(orig.gold_citations, back.gold_citations, strict=True):
+            assert a.citation == b.citation
+            assert a.cl_opinion_id == b.cl_opinion_id
 
 
 def test_load_eval_set_handles_empty(tmp_path: Path):
@@ -48,13 +78,16 @@ def test_load_eval_set_missing_file_raises(tmp_path: Path):
 
 
 def test_cite_check_example_default_metadata():
-    """Default metadata fields should be empty containers, not None."""
+    """metadata defaults to an empty dict; the other fields are required."""
     eval_set = pytest.importorskip("citecheck.data.eval_set")
 
-    ex = eval_set.CiteCheckExample(id="x", question="q?")
-    assert ex.gold_citations == []
-    assert ex.jurisdiction == ""
-    assert ex.source == ""
+    ex = eval_set.CiteCheckExample(
+        id="x",
+        question="q?",
+        gold_citations=[],
+        jurisdiction="us",
+        source="manual",
+    )
     assert isinstance(ex.metadata, dict) and ex.metadata == {}
 
 

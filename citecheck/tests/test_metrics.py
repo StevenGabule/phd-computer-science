@@ -31,6 +31,31 @@ from citecheck.eval.types import (
 )
 
 
+def _make_gold(
+    id: str,  # noqa: A002 - mirrors the dataclass field name
+    *,
+    question: str = "?",
+    gold_citations: list | None = None,
+    jurisdiction: str = "",
+    source: str = "manual",
+    metadata: dict | None = None,
+) -> CiteCheckExample:
+    """Helper that handles both real and fallback CiteCheckExample shapes.
+
+    The canonical (data.eval_set) variant is a frozen dataclass with no
+    defaults; the eval-layer fallback (citecheck.eval.types) has defaults
+    for everything but id/question. Try the kwargs-only form first.
+    """
+    return CiteCheckExample(
+        id=id,
+        question=question,
+        gold_citations=gold_citations if gold_citations is not None else [],
+        jurisdiction=jurisdiction,
+        source=source,
+        metadata=metadata if metadata is not None else {},
+    )
+
+
 def _make_pred(
     question_id: str,
     citations: list[tuple[str, CitationStatus, float]],
@@ -142,9 +167,8 @@ def test_citation_support_f1_perfect_score():
         ),
     ]
     gold = [
-        CiteCheckExample(
+        _make_gold(
             id="a",
-            question="?",
             metadata={"gold_support_labels": {"c1": True, "c2": True}},
         )
     ]
@@ -167,9 +191,8 @@ def test_citation_support_f1_hand_computed_pr():
         )
     ]
     gold = [
-        CiteCheckExample(
+        _make_gold(
             id="a",
-            question="?",
             metadata={
                 "gold_support_labels": {
                     "c1": True,   # TP
@@ -196,13 +219,7 @@ def test_citation_support_f1_threshold_gating():
             ],
         )
     ]
-    gold = [
-        CiteCheckExample(
-            id="a",
-            question="?",
-            metadata={"gold_support_labels": {"c1": True}},
-        )
-    ]
+    gold = [_make_gold(id="a", metadata={"gold_support_labels": {"c1": True}})]
     result = citation_support_f1(preds, gold, threshold=0.7)
     # pred_supports=False, gold=True -> FN; precision=0, recall=0, f1=0
     assert result["recall"] == pytest.approx(0.0)
@@ -212,7 +229,7 @@ def test_citation_support_f1_threshold_gating():
 
 def test_citation_support_f1_returns_zero_on_empty_labels():
     preds = [_make_pred("a", [("c1", CitationStatus.VERIFIED, 0.9)])]
-    gold = [CiteCheckExample(id="a", question="?")]  # no gold_support_labels
+    gold = [_make_gold(id="a")]  # no gold_support_labels
     result = citation_support_f1(preds, gold)
     assert result["support"] == pytest.approx(0.0)
     assert result["f1"] == pytest.approx(0.0)
@@ -223,21 +240,21 @@ def test_citation_support_f1_returns_zero_on_empty_labels():
 # ---------------------------------------------------------------------------
 def test_jurisdictional_validity_federal_binding():
     preds = [_make_pred("a", [("c1", CitationStatus.VERIFIED, 0.9)], court_jur="F")]
-    gold = [CiteCheckExample(id="a", question="?", jurisdiction="federal")]
+    gold = [_make_gold(id="a", jurisdiction="federal")]
     assert jurisdictional_validity(preds, gold) == pytest.approx(1.0)
 
 
 def test_jurisdictional_validity_sister_circuit_persuasive():
     """For a 9th-Cir question, a 2d-Cir opinion is persuasive (counts as valid)."""
     preds = [_make_pred("a", [("c1", CitationStatus.VERIFIED, 0.9)], court_jur="F-2")]
-    gold = [CiteCheckExample(id="a", question="?", jurisdiction="9th_circuit")]
+    gold = [_make_gold(id="a", jurisdiction="9th_circuit")]
     assert jurisdictional_validity(preds, gold) == pytest.approx(1.0)
 
 
 def test_jurisdictional_validity_wrong_court_fails():
     """A California-state opinion is not binding/persuasive for a 9th-Cir federal question."""
     preds = [_make_pred("a", [("c1", CitationStatus.VERIFIED, 0.9)], court_jur="S-NY")]
-    gold = [CiteCheckExample(id="a", question="?", jurisdiction="9th_circuit")]
+    gold = [_make_gold(id="a", jurisdiction="9th_circuit")]
     assert jurisdictional_validity(preds, gold) == pytest.approx(0.0)
 
 
@@ -253,14 +270,14 @@ def test_jurisdictional_validity_ignores_unresolvable():
             court_jur="F",
         )
     ]
-    gold = [CiteCheckExample(id="a", question="?", jurisdiction="federal")]
+    gold = [_make_gold(id="a", jurisdiction="federal")]
     # 1/1 resolved + valid; the fake is excluded.
     assert jurisdictional_validity(preds, gold) == pytest.approx(1.0)
 
 
 def test_jurisdictional_validity_no_resolved_returns_zero():
     preds = [_make_pred("a", [("fake", CitationStatus.UNRESOLVABLE, 0.0)])]
-    gold = [CiteCheckExample(id="a", question="?", jurisdiction="federal")]
+    gold = [_make_gold(id="a", jurisdiction="federal")]
     assert jurisdictional_validity(preds, gold) == pytest.approx(0.0)
 
 
@@ -353,9 +370,9 @@ def test_per_jurisdiction_breakdown_groups_correctly():
         _make_pred("c", [("c", CitationStatus.VERIFIED, 0.9)], court_jur="F-9"),
     ]
     gold = [
-        CiteCheckExample(id="a", question="?", jurisdiction="federal"),
-        CiteCheckExample(id="b", question="?", jurisdiction="federal"),
-        CiteCheckExample(id="c", question="?", jurisdiction="9th_circuit"),
+        _make_gold(id="a", jurisdiction="federal"),
+        _make_gold(id="b", jurisdiction="federal"),
+        _make_gold(id="c", jurisdiction="9th_circuit"),
     ]
     breakdown = per_jurisdiction_breakdown(preds, gold)
     assert set(breakdown.keys()) == {"federal", "9th_circuit"}
@@ -370,9 +387,8 @@ def test_per_jurisdiction_breakdown_groups_correctly():
 def test_aggregate_metrics_includes_all_seven_fields():
     preds = [_make_pred("a", [("c1", CitationStatus.VERIFIED, 0.9)], court_jur="F")]
     gold = [
-        CiteCheckExample(
+        _make_gold(
             id="a",
-            question="?",
             jurisdiction="federal",
             metadata={"gold_support_labels": {"c1": True}},
         )
@@ -397,17 +413,14 @@ def test_aggregate_metrics_with_human_ratings():
         _make_pred("a", [("c1", CitationStatus.VERIFIED, 0.9)]),
         _make_pred("b", [("c2", CitationStatus.VERIFIED, 0.9)]),
     ]
-    gold = [
-        CiteCheckExample(id="a", question="?"),
-        CiteCheckExample(id="b", question="?"),
-    ]
+    gold = [_make_gold(id="a"), _make_gold(id="b")]
     report = aggregate_metrics(preds, gold, human_ratings=[5, 3])
     assert report.answer_utility == pytest.approx(4.0)
 
 
 def test_aggregate_metrics_mismatched_ids_raises():
     preds = [_make_pred("a", [("c1", CitationStatus.VERIFIED, 0.9)])]
-    gold = [CiteCheckExample(id="b", question="?")]
+    gold = [_make_gold(id="b")]
     with pytest.raises(ValueError):
         aggregate_metrics(preds, gold)
 
@@ -417,7 +430,7 @@ def test_aggregate_metrics_mismatched_ids_raises():
 # ---------------------------------------------------------------------------
 def test_evaluation_report_to_dict_is_json_serializable():
     preds = [_make_pred("a", [("c1", CitationStatus.VERIFIED, 0.9)])]
-    gold = [CiteCheckExample(id="a", question="?")]
+    gold = [_make_gold(id="a")]
     report = aggregate_metrics(preds, gold)
     # answer_utility is NaN here; to_dict must replace NaN with the sentinel.
     d = report.to_dict()
@@ -433,7 +446,7 @@ def test_evaluation_report_to_dict_is_json_serializable():
 
 def test_evaluation_report_to_json_is_indented_by_default():
     preds = [_make_pred("a", [("c1", CitationStatus.VERIFIED, 0.9)])]
-    gold = [CiteCheckExample(id="a", question="?")]
+    gold = [_make_gold(id="a")]
     report = aggregate_metrics(preds, gold)
     s = report.to_json()
     assert "\n" in s  # default indent=2 produces multi-line JSON
@@ -442,7 +455,7 @@ def test_evaluation_report_to_json_is_indented_by_default():
 def test_evaluation_report_from_dict_round_trips_extras():
     """Unknown keys are routed into ``extra`` rather than raising."""
     preds = [_make_pred("a", [("c1", CitationStatus.VERIFIED, 0.9)])]
-    gold = [CiteCheckExample(id="a", question="?")]
+    gold = [_make_gold(id="a")]
     report = aggregate_metrics(preds, gold, extra={"git_sha": "deadbeef"})
     d = report.to_dict()
     d["unknown_key"] = "stuff"

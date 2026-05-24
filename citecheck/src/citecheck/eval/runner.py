@@ -234,29 +234,6 @@ def _make_run_id(baseline_name: str) -> str:
     return f"{baseline_name}-{stamp}"
 
 
-def _with_field(obj: Any, **updates: Any) -> Any:
-    """Return a copy of ``obj`` with the named fields updated.
-
-    Works on dataclasses; falls back to setattr for non-dataclass objects
-    (best-effort — if the object is frozen and not a dataclass we re-raise).
-    """
-    if is_dataclass(obj) and not isinstance(obj, type):
-        from dataclasses import replace
-
-        try:
-            return replace(obj, **updates)
-        except TypeError:
-            # frozen-but-not-replace-compatible: build a new dict and re-construct.
-            pass
-    # Best-effort mutation:
-    for k, v in updates.items():
-        try:
-            setattr(obj, k, v)
-        except (AttributeError, TypeError):
-            logger.debug("Could not set %s on %s; leaving original value.", k, type(obj))
-    return obj
-
-
 def _serialize_trace_row(ex: CiteCheckExample, pred: AnswerWithCitations) -> dict[str, Any]:
     """Pack one (gold, prediction, verification) tuple into a JSON-serializable dict."""
     return {
