@@ -83,10 +83,12 @@ class EvaluationRunner:
 
     # ---- main entry point ------------------------------------------------
     def run(self) -> EvaluationReport:
-        """Iterate the eval set, score it, persist outputs, and return the report."""
-        if not self.eval_examples:
-            raise ValueError("EvaluationRunner.run called with no eval examples.")
+        """Iterate the eval set, score it, persist outputs, and return the report.
 
+        Returns an empty-but-well-formed :class:`EvaluationReport` when
+        ``eval_examples`` is empty (avoids forcing callers into special-cased
+        branches when wiring CLIs).
+        """
         logger.info(
             "Starting evaluation: baseline=%s model=%s n=%d output=%s",
             self.baseline_name,
@@ -151,14 +153,19 @@ class EvaluationRunner:
 
     # ---- per-example mechanics ------------------------------------------
     def _answer_one(self, ex: CiteCheckExample) -> AnswerWithCitations:
-        """Invoke the baseline once, capturing latency if the baseline did not."""
+        """Invoke the baseline once, capturing latency if the baseline did not.
+
+        Always overrides the prediction's ``question_id`` with the gold
+        example's ``id`` so downstream alignment is guaranteed regardless of
+        what the baseline records (baselines often don't know the eval-set ID).
+        """
         start = time.perf_counter()
         try:
             pred = self.baseline.answer(ex.question)
         except Exception:  # noqa: BLE001 - we never want one bad example to abort a run
             logger.exception("Baseline failed on example id=%s; recording empty answer.", ex.id)
             elapsed_ms = (time.perf_counter() - start) * 1000.0
-            pred = AnswerWithCitations(
+            return AnswerWithCitations(
                 question_id=ex.id,
                 answer_text="",
                 citations=[],
@@ -166,12 +173,11 @@ class EvaluationRunner:
                 latency_ms=elapsed_ms,
                 metadata={"error": "baseline_exception"},
             )
-            return pred
 
         elapsed_ms = (time.perf_counter() - start) * 1000.0
-        # Force question_id and latency onto the prediction (the baseline may not).
-        if getattr(pred, "question_id", None) in (None, ""):
-            pred = _with_field(pred, question_id=ex.id)
+        # Force question_id to the gold example's id (canonical) and fill in
+        # latency if the baseline did not measure it.
+        pred = _with_field(pred, question_id=ex.id)
         if getattr(pred, "latency_ms", None) is None:
             pred = _with_field(pred, latency_ms=elapsed_ms)
         return pred

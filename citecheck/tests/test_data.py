@@ -1,4 +1,10 @@
-"""Tests for citecheck.data.* — CourtListenerClient, benchmarks, eval_set."""
+"""Tests for citecheck.data.* — CourtListenerClient, benchmarks, eval_set.
+
+These tests are owned by the *data* agent's deliverables; the eval agent
+includes them here so a single ``pytest`` run covers the whole package once
+all modules land. Each test ``pytest.importorskip``-s the module it needs so
+the suite stays green on a partial checkout.
+"""
 from __future__ import annotations
 
 import json
@@ -7,15 +13,19 @@ from pathlib import Path
 import pytest
 
 
+# ---------------------------------------------------------------------------
+# CiteCheckExample (data.eval_set)
+# ---------------------------------------------------------------------------
 def test_cite_check_example_roundtrip(tmp_path: Path, sample_eval_examples):
-    from citecheck.data.eval_set import load_eval_set, save_eval_set
+    """JSONL round-trip through save_eval_set / load_eval_set preserves fields."""
+    eval_set = pytest.importorskip("citecheck.data.eval_set")
 
     out = tmp_path / "eval.jsonl"
-    save_eval_set(sample_eval_examples, out)
+    eval_set.save_eval_set(sample_eval_examples, out)
 
-    loaded = load_eval_set(out)
+    loaded = eval_set.load_eval_set(out)
     assert len(loaded) == len(sample_eval_examples)
-    for orig, back in zip(sample_eval_examples, loaded):
+    for orig, back in zip(sample_eval_examples, loaded, strict=True):
         assert orig.id == back.id
         assert orig.question == back.question
         assert orig.gold_citations == back.gold_citations
@@ -23,94 +33,171 @@ def test_cite_check_example_roundtrip(tmp_path: Path, sample_eval_examples):
 
 
 def test_load_eval_set_handles_empty(tmp_path: Path):
-    from citecheck.data.eval_set import load_eval_set
+    eval_set = pytest.importorskip("citecheck.data.eval_set")
 
     empty = tmp_path / "empty.jsonl"
     empty.write_text("", encoding="utf-8")
-    assert load_eval_set(empty) == []
+    assert eval_set.load_eval_set(empty) == []
 
 
 def test_load_eval_set_missing_file_raises(tmp_path: Path):
-    from citecheck.data.eval_set import load_eval_set
+    eval_set = pytest.importorskip("citecheck.data.eval_set")
 
     with pytest.raises(FileNotFoundError):
-        load_eval_set(tmp_path / "nope.jsonl")
-
-
-def test_cl_client_resolve_returns_opinion_when_found(mocker, tmp_path: Path):
-    """CourtListenerClient.resolve_citation returns CLOpinion on 200 with hits."""
-    from citecheck.data.cl_client import CourtListenerClient
-
-    # Mock httpx.Client.post / get to return canned JSON
-    mock_response = mocker.MagicMock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = {
-        "results": [
-            {
-                "id": 555,
-                "case_name": "Test v. Case",
-                "court": "ca9",
-                "court_jurisdiction": "F",
-                "year": 2020,
-                "citation_strings": ["1 F.4th 1"],
-                "body_text": "Sample opinion.",
-                "url": "https://example/555",
-            }
-        ]
-    }
-    mock_response.raise_for_status.return_value = None
-
-    mocker.patch("httpx.Client.post", return_value=mock_response)
-    mocker.patch("httpx.Client.get", return_value=mock_response)
-
-    client = CourtListenerClient(api_key="fake-key", cache_dir=tmp_path / "cl_cache")
-    result = client.resolve_citation("Test v. Case, 1 F.4th 1 (9th Cir. 2020)")
-    # Implementation detail: result may be None if no real opinion-resolution code
-    # path matches the mock response. Just assert the method is callable.
-    assert result is None or hasattr(result, "id")
-
-
-def test_cl_client_rate_limit_state(tmp_path: Path):
-    """The client should expose a way to inspect or trigger rate-limit behavior."""
-    from citecheck.data.cl_client import CourtListenerClient
-
-    client = CourtListenerClient(api_key="fake-key", cache_dir=tmp_path / "cl_cache")
-    # The client should not raise on construction with no requests issued
-    assert client is not None
+        eval_set.load_eval_set(tmp_path / "nope.jsonl")
 
 
 def test_cite_check_example_default_metadata():
-    from citecheck.data.eval_set import CiteCheckExample
+    """Default metadata fields should be empty containers, not None."""
+    eval_set = pytest.importorskip("citecheck.data.eval_set")
 
-    ex = CiteCheckExample(id="x", question="q?")
+    ex = eval_set.CiteCheckExample(id="x", question="q?")
     assert ex.gold_citations == []
     assert ex.jurisdiction == ""
     assert ex.source == ""
     assert isinstance(ex.metadata, dict) and ex.metadata == {}
 
 
+def test_seed_from_charlotin_missing_csv_raises(tmp_path: Path):
+    """``seed_from_charlotin`` must raise when the tracker CSV isn't present."""
+    eval_set = pytest.importorskip("citecheck.data.eval_set")
+
+    missing = tmp_path / "absent.csv"
+    with pytest.raises((NotImplementedError, FileNotFoundError)):
+        eval_set.seed_from_charlotin(missing)
+
+
+# ---------------------------------------------------------------------------
+# Benchmarks (data.benchmarks)
+# ---------------------------------------------------------------------------
+def test_benchmark_example_jsonl_roundtrip(tmp_path: Path):
+    """BenchmarkExample JSONL serialization must round-trip cleanly."""
+    benchmarks = pytest.importorskip("citecheck.data.benchmarks")
+
+    example_cls = benchmarks.BenchmarkExample
+    to_jsonl = benchmarks.to_jsonl
+
+    examples = [
+        example_cls(id="b1", question="Q1?", answer="A1", metadata={"source": "cuad"}),
+        example_cls(id="b2", question="Q2?", answer="A2", metadata={}),
+    ]
+    out = tmp_path / "bench.jsonl"
+    to_jsonl(examples, out)
+
+    # Each line should be valid JSON with the same id/question/answer.
+    lines = out.read_text(encoding="utf-8").strip().splitlines()
+    assert len(lines) == len(examples)
+    parsed = [json.loads(line) for line in lines]
+    assert parsed[0]["id"] == "b1"
+    assert parsed[1]["question"] == "Q2?"
+
+
 @pytest.mark.network
 def test_legalbench_rag_loader_smoke():
-    """Smoke test that the loader function exists and is callable.
-
-    Marked network because it would hit Hugging Face Hub on real execution.
-    """
-    from citecheck.data.benchmarks import load_legalbench_rag
-
-    assert callable(load_legalbench_rag)
+    """``load_legalbench_rag`` exists and is callable (won't hit HF in CI)."""
+    benchmarks = pytest.importorskip("citecheck.data.benchmarks")
+    assert callable(benchmarks.load_legalbench_rag)
 
 
 @pytest.mark.network
 def test_cuad_loader_smoke():
-    from citecheck.data.benchmarks import load_cuad
+    """``load_cuad`` exists and is callable (won't hit HF in CI)."""
+    benchmarks = pytest.importorskip("citecheck.data.benchmarks")
+    assert callable(benchmarks.load_cuad)
 
-    assert callable(load_cuad)
+
+# ---------------------------------------------------------------------------
+# CourtListener client (data.cl_client) — depends on httpx
+# ---------------------------------------------------------------------------
+def test_cl_client_construct_no_key_warns(tmp_path: Path, caplog):
+    """Constructing without an API key should log a warning, not raise."""
+    pytest.importorskip("httpx")
+    pytest.importorskip("tenacity")
+    from citecheck.data.cl_client import CourtListenerClient
+
+    with caplog.at_level("WARNING"):
+        client = CourtListenerClient(api_key="", cache_dir=tmp_path / "cl_cache")
+    assert client is not None
+    # The warning text mentions the 100 req/hr unauthenticated tier.
+    assert any("unauthenticated" in rec.message.lower() for rec in caplog.records)
+    client.close()
 
 
-def test_seed_from_charlotin_missing_csv_raises(tmp_path: Path):
-    """seed_from_charlotin should raise / return empty when the tracker isn't on disk."""
-    from citecheck.data.eval_set import seed_from_charlotin
+def test_cl_client_resolve_returns_opinion_when_found(mocker, tmp_path: Path):
+    """resolve_citation returns CLOpinion when CL's response includes a hit."""
+    pytest.importorskip("httpx")
+    pytest.importorskip("tenacity")
+    from citecheck.data.cl_client import CourtListenerClient
 
-    missing = tmp_path / "absent.csv"
-    with pytest.raises((NotImplementedError, FileNotFoundError)):
-        seed_from_charlotin(missing)
+    # Two-step fetch: citation-lookup returns a match with an opinion_id, then
+    # get_opinion(id) returns the full opinion.
+    lookup_resp = mocker.MagicMock(status_code=200)
+    lookup_resp.json.return_value = [{"opinion_id": 12345}]
+    lookup_resp.raise_for_status.return_value = None
+
+    opinion_resp = mocker.MagicMock(status_code=200)
+    opinion_resp.json.return_value = {
+        "id": 12345,
+        "case_name": "Smith v. Jones",
+        "court": "ca9",
+        "court_jurisdiction": "F-9",
+        "date_filed": "2005-06-15",
+        "citation_strings": ["412 F.3d 567"],
+        "plain_text": "Holding ...",
+        "absolute_url": "https://courtlistener.com/12345/",
+    }
+    opinion_resp.raise_for_status.return_value = None
+
+    # Route by URL path: /citation-lookup/ -> lookup_resp, /opinions/ -> opinion_resp.
+    def _request(method, path, **kwargs):  # noqa: ARG001
+        if "citation-lookup" in path:
+            return lookup_resp
+        return opinion_resp
+
+    mocker.patch("httpx.Client.request", side_effect=_request)
+    client = CourtListenerClient(api_key="fake-key", cache_dir=tmp_path / "cl_cache")
+    result = client.resolve_citation("Smith v. Jones, 412 F.3d 567 (9th Cir. 2005)")
+    assert result is not None
+    assert result.id == 12345
+    assert "Smith" in result.case_name
+    client.close()
+
+
+def test_cl_client_resolve_returns_none_on_404(mocker, tmp_path: Path):
+    """A 404 on /citation-lookup/ must surface as None, not an exception."""
+    pytest.importorskip("httpx")
+    pytest.importorskip("tenacity")
+    import httpx
+    from citecheck.data.cl_client import CourtListenerClient
+
+    response = mocker.MagicMock(status_code=404)
+    err = httpx.HTTPStatusError("404", request=mocker.MagicMock(), response=response)
+    response.raise_for_status.side_effect = err
+
+    mocker.patch("httpx.Client.request", return_value=response)
+    client = CourtListenerClient(api_key="fake-key", cache_dir=tmp_path / "cl_cache")
+    result = client.resolve_citation("FAKE v. FAKE, 999 F.3d 999 (9th Cir. 2099)")
+    assert result is None
+    client.close()
+
+
+def test_cl_client_rate_limit_raises(tmp_path: Path):
+    """Saturating the soft rate-limit window should raise RateLimitedError."""
+    pytest.importorskip("httpx")
+    pytest.importorskip("tenacity")
+    from citecheck.data.cl_client import CourtListenerClient, RateLimitedError
+
+    client = CourtListenerClient(api_key="fake-key", cache_dir=tmp_path / "cl_cache")
+    # Directly fill the sliding window with synthetic timestamps.
+    import time as _time
+
+    now = _time.monotonic()
+    # Implementation detail: _calls is a deque of monotonic timestamps and
+    # _SOFT_RATE_LIMIT is module-level; introspect both to avoid hard-coding.
+    from citecheck.data.cl_client import _SOFT_RATE_LIMIT  # type: ignore[attr-defined]
+
+    for _ in range(_SOFT_RATE_LIMIT):
+        client._calls.append(now)  # type: ignore[attr-defined]
+    with pytest.raises(RateLimitedError):
+        client._check_rate_limit()  # type: ignore[attr-defined]
+    client.close()
