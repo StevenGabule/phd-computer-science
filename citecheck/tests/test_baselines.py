@@ -69,53 +69,70 @@ def test_all_baselines_satisfy_protocol():
 
 
 # ---------------------------------------------------------------------------
+# Shared resolver fixture
+# ---------------------------------------------------------------------------
+@pytest.fixture
+def stub_resolver(mocker, mock_cl_client):
+    """A CitationResolver with parse_bluebook + verify stubbed (no eyecite needed)."""
+    pytest.importorskip("citecheck.agent")
+    from citecheck.agent import CitationResolver
+    from citecheck.eval.types import CitationStatus, VerificationResult
+
+    resolver = mocker.MagicMock(spec=CitationResolver)
+    resolver.parse_bluebook.return_value = []
+    resolver.verify.return_value = VerificationResult(
+        citation_str="",
+        status=CitationStatus.VERIFIED,
+        entailment_score=0.9,
+    )
+    return resolver
+
+
+# ---------------------------------------------------------------------------
 # VanillaBaseline
 # ---------------------------------------------------------------------------
-def test_vanilla_baseline_answer(mock_generator):
-    """VanillaBaseline.answer returns AnswerWithCitations with no retrieved context."""
+def test_vanilla_baseline_answer(mock_generator, stub_resolver):
+    """VanillaBaseline.answer returns an answer object with no retrieval context."""
     vanilla = pytest.importorskip("citecheck.baselines.vanilla")
-    from citecheck.eval.types import AnswerWithCitations
 
-    baseline = vanilla.VanillaBaseline(generator=mock_generator)
+    baseline = vanilla.VanillaBaseline(generator=mock_generator, resolver=stub_resolver)
     result = baseline.answer("Test question?")
-    assert isinstance(result, AnswerWithCitations)
+    # Vanilla baseline must call the generator exactly once and never retrieve.
     mock_generator.assert_called_once()
-    # No retrieval means no retrieved-doc identifiers in metadata.
-    retrieved = (result.metadata or {}).get("retrieved_doc_ids", [])
-    assert retrieved == [] or retrieved is None
+    # The returned object should at minimum carry the generated text.
+    text = getattr(result, "text", None) or getattr(result, "answer_text", "")
+    assert text  # non-empty
 
 
 # ---------------------------------------------------------------------------
 # NaiveRAGBaseline
 # ---------------------------------------------------------------------------
-def test_naive_rag_baseline_uses_retriever(mock_generator, mock_retriever):
+def test_naive_rag_baseline_uses_retriever(mock_generator, mock_retriever, stub_resolver):
     """NaiveRAGBaseline.answer calls retriever and feeds context into the prompt."""
     naive_rag = pytest.importorskip("citecheck.baselines.naive_rag")
-    from citecheck.eval.types import AnswerWithCitations
 
     baseline = naive_rag.NaiveRAGBaseline(
         generator=mock_generator,
         retriever=mock_retriever,
+        resolver=stub_resolver,
     )
-    result = baseline.answer("Test question?")
-    assert isinstance(result, AnswerWithCitations)
+    baseline.answer("Test question?")
     mock_retriever.search.assert_called()
     mock_generator.assert_called()
-    # The generator must have been called with a prompt that includes
-    # at least one retrieved passage substring.
+    # The generator must have been called with a prompt that includes at
+    # least one retrieved passage substring.
     call_args = mock_generator.call_args
-    if call_args is not None:
-        prompt = (
-            call_args.args[0]
-            if call_args.args
-            else call_args.kwargs.get("prompt", "")
-        )
-        if isinstance(prompt, str) and prompt:
-            # mock_retriever returns passages containing "fixture-supplier" or
-            # "Strict liability"; one of them should appear in the prompt.
-            assert (
-                "fixture-supplier" in prompt
-                or "Strict liability" in prompt
-                or "Smith v. Jones" in prompt
-                or "Doe v. Roe" in prompt
-            )
+    assert call_args is not None
+    prompt = (
+        call_args.args[0]
+        if call_args.args
+        else call_args.kwargs.get("prompt", "")
+    )
+    assert isinstance(prompt, str) and prompt
+    # mock_retriever's canned passages mention "fixture-supplier" / "Strict liability".
+    assert (
+        "fixture-supplier" in prompt
+        or "Strict liability" in prompt
+        or "Smith v. Jones" in prompt
+        or "Doe v. Roe" in prompt
+    )

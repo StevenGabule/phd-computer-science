@@ -153,15 +153,19 @@ class EvaluationRunner:
 
     # ---- per-example mechanics ------------------------------------------
     def _answer_one(self, ex: CiteCheckExample) -> AnswerWithCitations:
-        """Invoke the baseline once, capturing latency if the baseline did not.
+        """Invoke the baseline once, wrapping into the eval-shape AnswerWithCitations.
 
-        Always overrides the prediction's ``question_id`` with the gold
-        example's ``id`` so downstream alignment is guaranteed regardless of
-        what the baseline records (baselines often don't know the eval-set ID).
+        * Captures wall-clock latency around the baseline call.
+        * Always sets ``question_id`` to the gold example's ``id`` so downstream
+          alignment is guaranteed regardless of what the baseline emits.
+        * Bridges agent-shaped answers (``text`` + tuple citations) into
+          eval-shaped answers via :meth:`AnswerWithCitations.from_agent_answer`.
+        * One bad example never aborts the run; the runner records an empty
+          answer marked with ``metadata['error']`` and continues.
         """
         start = time.perf_counter()
         try:
-            pred = self.baseline.answer(ex.question)
+            raw_pred = self.baseline.answer(ex.question)
         except Exception:  # noqa: BLE001 - we never want one bad example to abort a run
             logger.exception("Baseline failed on example id=%s; recording empty answer.", ex.id)
             elapsed_ms = (time.perf_counter() - start) * 1000.0
@@ -175,11 +179,13 @@ class EvaluationRunner:
             )
 
         elapsed_ms = (time.perf_counter() - start) * 1000.0
-        # Force question_id to the gold example's id (canonical) and fill in
-        # latency if the baseline did not measure it.
-        pred = _with_field(pred, question_id=ex.id)
-        if getattr(pred, "latency_ms", None) is None:
-            pred = _with_field(pred, latency_ms=elapsed_ms)
+        # Normalize via the adapter and inject canonical id + latency.
+        pred = AnswerWithCitations.from_agent_answer(
+            raw_pred,
+            question_id=ex.id,
+            latency_ms=getattr(raw_pred, "latency_ms", None) or elapsed_ms,
+            tokens_used=getattr(raw_pred, "tokens_used", None),
+        )
         return pred
 
     # ---- human ratings ---------------------------------------------------

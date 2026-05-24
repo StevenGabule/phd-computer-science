@@ -100,12 +100,13 @@ def test_citation_resolver_parse_bluebook_specific_citation(mock_cl_client):
 
 
 def test_citation_resolver_verify_returns_result(mocker, mock_cl_client):
-    """verify() returns a VerificationResult with a CitationStatus."""
+    """verify() returns the agent's VerificationResult with a CitationStatus."""
     agent = pytest.importorskip("citecheck.agent")
-    from citecheck.eval.types import CitationStatus, VerificationResult
 
     resolver = agent.CitationResolver(cl_client=mock_cl_client)
     # Bypass NLI by stubbing the internal predictor.
+    if hasattr(resolver, "_score_entailment"):
+        mocker.patch.object(resolver, "_score_entailment", return_value=0.9)
     if hasattr(resolver, "_nli_predict"):
         mocker.patch.object(resolver, "_nli_predict", return_value=0.9)
 
@@ -113,21 +114,20 @@ def test_citation_resolver_verify_returns_result(mocker, mock_cl_client):
         citation_str="Smith v. Jones, 412 F.3d 567 (9th Cir. 2005)",
         asserted_claim="A fixture-supplier is liable for design defects.",
     )
-    assert isinstance(result, VerificationResult)
-    assert isinstance(result.status, CitationStatus)
+    assert isinstance(result, agent.VerificationResult)
+    assert isinstance(result.status, agent.CitationStatus)
 
 
 # ---------------------------------------------------------------------------
 # VerifyLoop
 # ---------------------------------------------------------------------------
 def test_verify_loop_answer_happy_path(mocker, mock_cl_client, mock_generator, mock_retriever):
-    """VerifyLoop.answer should return AnswerWithCitations on a clean path."""
+    """VerifyLoop.answer should return the agent's AnswerWithCitations on a clean path."""
     agent = pytest.importorskip("citecheck.agent")
-    from citecheck.eval.types import AnswerWithCitations
 
     resolver = agent.CitationResolver(cl_client=mock_cl_client)
-    if hasattr(resolver, "_nli_predict"):
-        mocker.patch.object(resolver, "_nli_predict", return_value=0.95)
+    if hasattr(resolver, "_score_entailment"):
+        mocker.patch.object(resolver, "_score_entailment", return_value=0.95)
 
     loop = agent.VerifyLoop(
         generator=mock_generator,
@@ -138,8 +138,9 @@ def test_verify_loop_answer_happy_path(mocker, mock_cl_client, mock_generator, m
         use_constrained_decoding=False,
     )
     result = loop.answer("Is the fixture-supplier liable?")
-    assert isinstance(result, AnswerWithCitations)
-    assert result.answer_text
+    assert isinstance(result, agent.AnswerWithCitations)
+    text = getattr(result, "text", None) or getattr(result, "answer_text", "")
+    assert text
     mock_retriever.search.assert_called()
     mock_generator.assert_called()
 
@@ -147,15 +148,14 @@ def test_verify_loop_answer_happy_path(mocker, mock_cl_client, mock_generator, m
 def test_verify_loop_iteration_cap(mocker, mock_cl_client, mock_generator, mock_retriever):
     """The loop must not exceed max_iterations even when every citation fails."""
     agent = pytest.importorskip("citecheck.agent")
-    from citecheck.eval.types import CitationStatus, VerificationResult
 
     resolver = agent.CitationResolver(cl_client=mock_cl_client)
     mocker.patch.object(
         resolver,
         "verify",
-        return_value=VerificationResult(
+        return_value=agent.VerificationResult(
             citation_str="x",
-            status=CitationStatus.UNRESOLVABLE,
+            status=agent.CitationStatus.UNRESOLVABLE,
             entailment_score=0.0,
         ),
     )
