@@ -31,3 +31,5 @@
 | 2026-05-25 | Phase 4 cash budget estimate: ~$2,500–$3,500 (application fees + transcripts + GRE) | Total 18-month out-of-pocket: ~$5K–$7K | N/A — observation |
 | 2026-05-25 | Project root README.md written for navigation | Quick-start guide + file map + outstanding M2 decisions | Yes |
 | 2026-05-25 | Split problem_statement.md into two files (problem_statement.md + citecheck_design.md) | Original v0.1 was 1,265 words — 2x the Phase 1 plan's 400-600 target. Tight problem statement is the "SOP / advisor outreach" version; design doc holds full implementation detail. | Yes — files can be re-merged |
+| 2026-05-25 | Phase 2 v0.1 scaffold complete: citecheck/ Python package | 49 Python files, 6,961 lines; 54 expected files all present and parse cleanly. Three commits on origin/main: 1828142 (foundation + data+retrieval+reranker+agent+baselines+eval), 5d6f0a4 (tests + Agent K finalization + bert-score dep). | Yes — code can be revised |
+| 2026-05-25 | Added pyarrow + bert-score to citecheck/pyproject.toml post-scaffold | Agents flagged these as missing during their work (pyarrow for pandas parquet IO, bert-score for EL-RAG Evidence Alignment Layer proxy) | N/A |
