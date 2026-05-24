@@ -1,0 +1,32 @@
+# Decision Log
+
+| Date | Decision | Rationale | Reversible? |
+|------|----------|-----------|-------------|
+| 2026-05-24 | Adopt the "Research Portfolio Sprint" approach (70/15/10/5 weights across Tracks R/C/A/M) | Master's-level applicants compete on demonstrable research capability; one focused artifact outweighs broader coursework | Yes, but increasingly costly after research project begins in Sep 2026 |
+| 2026-05-24 | Selected Niche C: agentic RAG for legal/contracts as the research direction | Legal domain is comparatively underserved vs. medical/financial RAG per May 2026 Scite literature scan | Yes — niche revisit possible at M2 (Aug 2026) and M3 (Nov 2026) with rising cost |
+| 2026-05-24 | Target Fall 2028 PhD entry (apply Dec 2027 – Jan 2028) | 18-month runway allows for one publishable research artifact and proper application materials | Yes — could defer to Fall 2029 if Phase 2 stalls |
+| 2026-05-25 | Seeded reading list with 7 foundational papers from the design-phase Scite search | These were the highest-relevance hits from the planning literature scan; safer than re-searching | Yes |
+| 2026-05-25 | Added 10 legal-NLP-specific papers (now 17 total in reading list) | Scite search for LegalBench/ContractNLI/CUAD returned directly relevant 2024-2026 papers including the benchmarks themselves and the MLEB, CLAUSE, EL-RAG benchmark families | Yes |
+| 2026-05-25 | Reproduction-target benchmarks identified: LegalBench, ContractNLI, CUAD, MLEB, LegalBench-RAG | These appear repeatedly across the 17-paper reading list; standard baselines in 2024-2026 legal LLM literature | Yes (can swap benchmarks at M2/M3) |
+| 2026-05-25 | Reference manager: Zotero | Free, open-source, BibTeX export, strong browser connector ecosystem | Easy — paper metadata is portable |
+| 2026-05-25 | Application geographic focus: US + Europe top tier | Wider opportunity surface; Europe is open to applied-AI work and offers funded PhD positions | Yes — can drop tier or add Asia at M2/M3 |
+| 2026-05-25 | Reading list expanded to 29 papers via 4 parallel Scite searches | Covers graph/multi-hop RAG, agent architectures (ReAct/ToT/Reflexion), hallucination/grounding, and legal benchmarks (COLIEE, LexGLUE) | Yes (papers can be dropped after skim) |
+| 2026-05-25 | Quevedo et al. 2024 (Legal NLP survey) flagged as priority-1 read | A systematic mapping study covers 2015-2022 Legal NLP comprehensively — fastest way to fill foundational context | Easy to deprioritize if found low-value |
+| 2026-05-25 | Draft taxonomy v0.1 generated from abstracts (assistant-drafted, not deep-read) | Provides structural scaffolding for July's deep reads; identifies 4 candidate gaps (A: agentic legal eval benchmark; B: multi-hop legal RAG; C: efficiency-focused; D: citation faithfulness) | Yes — taxonomy will be revised after each batch of deep reads |
+| 2026-05-25 | All 4 candidate gaps developed in parallel via background research agents with Scite validation | Each agent produced a detailed 600-900 word problem statement with feasibility, novelty, scoop-risk, and target-venue analysis | Yes (candidates can be revised; lock decision is M2) |
+| 2026-05-25 | Recommended M2 lock: D primary (CiteCheck), A secondary (ContractTraj), B deferred (cost flag), C dropped (RL skill floor + scoop risk) | D has highest impact (Mata v. Avianca) + lowest skill floor + highest data access; C has critical skill-floor risk and 3 fresh competing papers (RECON/HERA/GRAPH-GRPO-LEX) | Yes — final decision at M2 (Aug 31, 2026) after deep reads |
+| 2026-05-25 | Phase 2 plan written (26 tasks, Sep 2026–Apr 2027) tailored to CiteCheck | Build-phase milestones M3 (baselines), M4 (novel contribution prototype), early M5 (full experiments) | Yes — will revise if M2 lock changes candidate |
+| 2026-05-25 | Phase 2 cash budget estimate: ~$2,180–$3,380 (annotator $2k–3.2k + APIs $80 + Colab Pro $80) | Substantially more than B's original $800 estimate; annotator is dominant line item; needs decision by Dec 2026 (Task 26) | Yes — annotator cost can be reduced via law-student collaborator |
+| 2026-05-25 | Advisors list populated (59 across 22 of 22 programs) | All US + Europe targets covered; 13 Asst, 18 Assoc, 27 Full, 1 Lecturer; Top 10 stars identified | Yes — user customizes star list |
+| 2026-05-25 | Discovery: Greg Durrett & Eunsol Choi moved UT Austin → NYU (Fall 2025) | Suggests NYU should be added as a target program | Yes |
+| 2026-05-25 | Discovery: Phil Blunsom left Oxford CS (Sep 2024); no strong legal-NLP at Oxford | Oxford has weak legal-NLP fit; consider deprioritizing | Yes — investigate alternatives Aug 2026 |
+| 2026-05-25 | SOP narrative skeleton drafted for CiteCheck | ~1,160 narrative words; reusable per-program; flagged [INSERT SPECIFIC ACCOMPLISHMENTS] as heavy-lifting placeholder | Yes — will iterate as application materials develop |
+| 2026-05-25 | Reading list at 56 papers (target 50 hit with margin) | All gap areas covered; 3 sub-gaps flagged for "needs broader search" (Bluebook parsing, CourtListener integration in LLMs, contract trajectory benchmarks) | N/A — additive only |
+| 2026-05-25 | Top 10 advisors starred in advisors.md (★): Ho, Nyarko, Šavelka, Welleck, Zamani, Khashabi, Lapata, Vlachos, Matthes, Narasimhan | Per Agent E recommendation; user can revise | Yes — quick edit |
+| 2026-05-25 | NYU added to programs.md as Match tier | Durrett + Choi moved UT Austin → NYU Fall 2025 | Yes |
+| 2026-05-25 | CiteCheck problem_statement.md v0.1 draft written | Awaiting user refinement during Phase 1 deep reads; lock at M2 (2026-08-31) | Yes — pre-lock |
+| 2026-05-25 | Phase 3 plan + Phase 4 plan written | 18-month plan now has complete phase-level task structure | Yes |
+| 2026-05-25 | Artifacts strategy recommends Option 2 (citation-existence verifier mini-paper Jun-Sep 2026) + Option 1 (eyecite PRs) as firm commitments | Closes SOP track-record gap before Sep 2027 SOP-writing season | Yes — user decides whether to commit |
+| 2026-05-25 | 10 per-advisor cold-email variants drafted (outreach/email_variants/) | Most likely to respond: Šavelka, Nyarko, Khashabi; least confident: Ho, Lapata (too senior); Matthes + Vlachos flagged for citation-specificity refinement | Yes — user customizes before sending |
+| 2026-05-25 | Phase 4 cash budget estimate: ~$2,500–$3,500 (application fees + transcripts + GRE) | Total 18-month out-of-pocket: ~$5K–$7K | N/A — observation |
+| 2026-05-25 | Project root README.md written for navigation | Quick-start guide + file map + outstanding M2 decisions | Yes |
