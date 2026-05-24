@@ -71,6 +71,29 @@
 - [`PHASE3_LIMITS.md`](PHASE3_LIMITS.md) — What AI cannot do for Phase 3 execution
 - [`PHASE4_LIMITS.md`](PHASE4_LIMITS.md) — What AI cannot do for Phase 4 execution
 
+### Master roadmap + learning frameworks (start here when you return)
+
+- [`roadmap/THE_ROADMAP.md`](roadmap/THE_ROADMAP.md) — **Master navigation document.** Read this first. Day-by-day for week 0, week-by-week for Phase 1, month-by-month for Phases 2-5.
+- [`roadmap/bottlenecks_protocols.md`](roadmap/bottlenecks_protocols.md) — Catalog of common stuck points with specific protocols for each
+- [`learning/how_to_read_papers.md`](learning/how_to_read_papers.md) — The 3-pass method; the single most important skill
+- [`learning/note_taking_system.md`](learning/note_taking_system.md) — Durable, low-overhead note-taking
+- [`learning/research_skills_curriculum.md`](learning/research_skills_curriculum.md) — Month-by-month deliberate practice for 18 months
+- [`learning/decision_frameworks.md`](learning/decision_frameworks.md) — Pre-committed criteria for the 10 major decisions in the plan
+- [`learning/writing_practices.md`](learning/writing_practices.md) — Technical writing for papers, SOPs, emails, journals
+
+### Community + wellness
+
+- [`community/networking_strategy.md`](community/networking_strategy.md) — Reading groups, Twitter/Bluesky, conferences, paper-swap
+- [`wellness/sustainable_practices.md`](wellness/sustainable_practices.md) — Sleep, exercise, burnout prevention across 18 months
+- [`wellness/relationships_communication.md`](wellness/relationships_communication.md) — Partner, family, friends communication patterns
+
+### Financial + decisions
+
+- [`financial/stipend_planning.md`](financial/stipend_planning.md) — PhD stipend reality across target programs; offer comparison framework
+- [`financial/international_considerations.md`](financial/international_considerations.md) — Visa, healthcare, banking for international applicants
+- [`decisions/offer_evaluation.md`](decisions/offer_evaluation.md) — Weighted criteria for picking between PhD offers (April 2028)
+- [`decisions/rejection_protocol.md`](decisions/rejection_protocol.md) — What to do if rejections arrive (and if all programs reject)
+
 ### CiteCheck codebase
 
 - [`citecheck/`](citecheck/) — Full Python package scaffold (49 Python files, 7,000+ lines, 107 tests). See `citecheck/README.md`.
@@ -123,10 +146,17 @@ See [`journal/decisions.md`](journal/decisions.md) for the full chronological lo
 ## How to use this workspace
 
 **If you're picking up after a break:**
-1. Read [`journal/weekly.md`](journal/weekly.md) for the latest entry
-2. Check current phase plan for the next pending task
-3. Reference [`project/problem_statement.md`](project/problem_statement.md) to re-anchor on the research direction
-4. Skim [`literature/taxonomy.md`](literature/taxonomy.md) if you've been away >4 weeks (the field moves fast)
+1. Read [`roadmap/THE_ROADMAP.md`](roadmap/THE_ROADMAP.md) — find your current week
+2. Read [`journal/weekly.md`](journal/weekly.md) for the latest entry
+3. Check current phase plan for the next pending task
+4. Reference [`project/problem_statement.md`](project/problem_statement.md) to re-anchor on the research direction
+5. Skim [`literature/taxonomy.md`](literature/taxonomy.md) if you've been away >4 weeks (the field moves fast)
+
+**If you're stuck:**
+- See [`roadmap/bottlenecks_protocols.md`](roadmap/bottlenecks_protocols.md). Find your specific situation; follow the protocol.
+
+**If you're facing a major decision:**
+- See [`learning/decision_frameworks.md`](learning/decision_frameworks.md). Apply the pre-committed criteria.
 
 **If you're updating after deep-reading papers:**
 1. Add structured notes to `literature/papers/{lastname}-{year}.md`
