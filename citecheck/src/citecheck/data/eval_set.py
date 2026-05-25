@@ -253,8 +253,7 @@ def human_verify_subset(
         n: How many to yield. If ``n > len(examples)``, yields everything.
     """
     # Deterministic head-slice; callers who want randomness should shuffle first.
-    for ex in examples[: max(0, n)]:
-        yield ex
+    yield from examples[: max(0, n)]
 
 
 __all__ = [

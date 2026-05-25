@@ -217,7 +217,7 @@ class CrossEncoderReranker(nn.Module):
         logger.info("Saved CrossEncoderReranker to %s", path)
 
     @classmethod
-    def from_pretrained(cls, path: Any) -> "CrossEncoderReranker":
+    def from_pretrained(cls, path: Any) -> CrossEncoderReranker:
         """Inverse of :meth:`save_pretrained`."""
         from pathlib import Path
 

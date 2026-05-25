@@ -117,7 +117,7 @@ def _extract_citations(passage: str) -> list[Any]:
         return []
 
 
-def _gold_opinion_ids(ex: "CiteCheckExample") -> set[str]:
+def _gold_opinion_ids(ex: CiteCheckExample) -> set[str]:
     """Pull supporting opinion IDs out of a CiteCheckExample regardless of attr name."""
     for attr in (
         "support_opinion_ids",
@@ -135,7 +135,7 @@ def _gold_opinion_ids(ex: "CiteCheckExample") -> set[str]:
 def _grounding_score(
     passage: str,
     gold_ids: set[str],
-    cl_client: "CourtListenerClient",
+    cl_client: CourtListenerClient,
 ) -> tuple[float, dict[str, Any]]:
     """Compute the soft grounding label for a single passage."""
     citations = _extract_citations(passage)
@@ -176,9 +176,9 @@ def _grounding_score(
 
 
 def build_reranker_training_data(
-    eval_examples: list["CiteCheckExample"],
-    bm25_retriever: "BM25Retriever",
-    cl_client: "CourtListenerClient",
+    eval_examples: list[CiteCheckExample],
+    bm25_retriever: BM25Retriever,
+    cl_client: CourtListenerClient,
     n_pos: int = 1,
     n_hard_neg: int = 2,
     n_easy_neg: int = 1,

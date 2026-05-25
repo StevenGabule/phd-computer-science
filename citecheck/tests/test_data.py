@@ -215,6 +215,7 @@ def test_cl_client_resolve_returns_none_on_404(mocker, tmp_path: Path):
     pytest.importorskip("httpx")
     pytest.importorskip("tenacity")
     import httpx
+
     from citecheck.data.cl_client import CourtListenerClient
 
     response = mocker.MagicMock(status_code=404)

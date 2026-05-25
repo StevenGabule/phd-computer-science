@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
 import pytest
 
@@ -19,6 +18,9 @@ from citecheck.eval.types import (
     CiteCheckExample,
     VerificationResult,
 )
+
+# Canonical test citation referenced across multiple fixtures.
+_TEST_CITE = "Smith v. Jones, 412 F.3d 567 (9th Cir. 2005)"
 
 
 @dataclass(slots=True)
@@ -42,10 +44,10 @@ def sample_eval_examples() -> list[CiteCheckExample]:
         CiteCheckExample(
             id="ex001",
             question="Is a fixture-supplier liable for design defects under NY law?",
-            gold_citations=["Smith v. Jones, 412 F.3d 567 (9th Cir. 2005)"],
+            gold_citations=[_TEST_CITE],
             jurisdiction="ny",
             source="manual",
-            metadata={"gold_support_labels": {"Smith v. Jones, 412 F.3d 567 (9th Cir. 2005)": True}},
+            metadata={"gold_support_labels": {_TEST_CITE: True}},
         ),
         CiteCheckExample(
             id="ex002",
@@ -115,11 +117,11 @@ def sample_answer_verified(sample_cl_opinion) -> AnswerWithCitations:
     """An AnswerWithCitations where the single citation is VERIFIED."""
     return AnswerWithCitations(
         question_id="ex001",
-        answer_text="Yes, the fixture-supplier is liable. See Smith v. Jones, 412 F.3d 567 (9th Cir. 2005).",
-        citations=["Smith v. Jones, 412 F.3d 567 (9th Cir. 2005)"],
+        answer_text=f"Yes, the fixture-supplier is liable. See {_TEST_CITE}.",
+        citations=[_TEST_CITE],
         verification_results=[
             VerificationResult(
-                citation_str="Smith v. Jones, 412 F.3d 567 (9th Cir. 2005)",
+                citation_str=_TEST_CITE,
                 status=CitationStatus.VERIFIED,
                 entailment_score=0.92,
                 resolved_opinion_id=sample_cl_opinion.id,

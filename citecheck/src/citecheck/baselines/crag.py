@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Callable, Sequence
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from citecheck.agent.citation_resolver import CitationResolver
@@ -38,7 +38,7 @@ Generator = Callable[[str], str]
 WebSearch = Callable[[str], Sequence[str]]
 
 
-class CRAGVerdict(str, Enum):
+class CRAGVerdict(StrEnum):
     """Output of the retrieval evaluator on a single (query, doc) pair."""
 
     CORRECT = "correct"

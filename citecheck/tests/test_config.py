@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
 
 def test_imports_cleanly():
     from citecheck.config import (
@@ -89,7 +87,6 @@ def test_agent_iteration_cap():
 
 
 def test_ensure_dirs_creates(tmp_path, monkeypatch):
-    from citecheck import config as cfg_module
 
     # Replace PATHS with a temp version
     monkeypatch.setenv("CITECHECK_DATA_DIR", str(tmp_path / "data"))

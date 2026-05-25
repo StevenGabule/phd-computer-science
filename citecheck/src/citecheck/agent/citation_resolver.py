@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 from typing import TYPE_CHECKING, Any
 
 from citecheck.config import AGENT, MODELS
@@ -37,7 +37,7 @@ _NLI_CHUNK_CHARS = 1800
 _NLI_CHUNK_OVERLAP = 200
 
 
-class CitationStatus(str, Enum):
+class CitationStatus(StrEnum):
     """Verdict produced by :meth:`CitationResolver.verify`.
 
     Values are strings so they JSON-serialize cleanly into eval outputs.
@@ -147,11 +147,11 @@ class CitationResolver:
                 year_val = int(year_raw) if year_raw else None
             except (TypeError, ValueError):
                 year_val = None
+            matched_attr = getattr(cit, "matched_text", None)
+            raw_text = matched_attr() if callable(matched_attr) else str(cit)
             out.append(
                 ParsedCitation(
-                    raw_text=getattr(cit, "matched_text", lambda: str(cit))()
-                    if callable(getattr(cit, "matched_text", None))
-                    else str(cit),
+                    raw_text=raw_text,
                     reporter=groups.get("reporter", "") or "",
                     volume=groups.get("volume", "") or "",
                     page=groups.get("page", "") or "",

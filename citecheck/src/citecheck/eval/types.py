@@ -28,7 +28,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 from typing import Any, Protocol, runtime_checkable
 
 logger = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # CitationStatus
 # ---------------------------------------------------------------------------
-class CitationStatus(str, Enum):
+class CitationStatus(StrEnum):
     """Outcome of verifying a single emitted citation against a registry.
 
     Values are strings so they serialize cleanly into JSON eval traces.
@@ -87,7 +87,9 @@ class VerificationResult:
     reasoning: str = ""
 
     @classmethod
-    def from_agent_result(cls, agent_result: Any, citation_str: str | None = None) -> VerificationResult:
+    def from_agent_result(
+        cls, agent_result: Any, citation_str: str | None = None
+    ) -> VerificationResult:
         """Build an eval :class:`VerificationResult` from the agent's variant.
 
         The agent's ``citecheck.agent.VerificationResult`` carries
@@ -183,18 +185,25 @@ class AnswerWithCitations:
         ``citations: list[tuple[str, VerificationResult]]`` shape.
         """
         # Already eval-shaped? Just copy / inject missing fields.
-        if all(hasattr(agent_answer, f) for f in ("question_id", "answer_text", "verification_results")):
+        _eval_shape_fields = ("question_id", "answer_text", "verification_results")
+        if all(hasattr(agent_answer, f) for f in _eval_shape_fields):
+            _latency = (
+                latency_ms
+                if latency_ms is not None
+                else getattr(agent_answer, "latency_ms", None)
+            )
+            _tokens = (
+                tokens_used
+                if tokens_used is not None
+                else getattr(agent_answer, "tokens_used", None)
+            )
             return cls(
                 question_id=question_id or agent_answer.question_id,
                 answer_text=agent_answer.answer_text,
                 citations=list(agent_answer.citations or []),
                 verification_results=list(agent_answer.verification_results or []),
-                latency_ms=(
-                    latency_ms if latency_ms is not None else getattr(agent_answer, "latency_ms", None)
-                ),
-                tokens_used=(
-                    tokens_used if tokens_used is not None else getattr(agent_answer, "tokens_used", None)
-                ),
+                latency_ms=_latency,
+                tokens_used=_tokens,
                 metadata=dict(getattr(agent_answer, "metadata", {}) or {}),
             )
 
@@ -285,7 +294,7 @@ class BaselineProtocol(Protocol):
     the runner converts via :meth:`AnswerWithCitations.from_agent_answer`.
     """
 
-    def answer(self, question: str) -> "AnswerWithCitations":
+    def answer(self, question: str) -> AnswerWithCitations:
         """Produce an answer with citations for ``question``."""
         ...
 
